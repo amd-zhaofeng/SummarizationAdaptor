@@ -25,9 +25,16 @@ This project develops a **long document summarization adapter** for generating h
    - [5.5 Post-Processing](#55-post-processing)
    - [5.6 Evaluation and Optimization](#56-evaluation-and-optimization)
    - [5.7 Challenges and Solutions](#57-challenges-and-solutions)
-- [6. Source Code and Model](#6-source-code-and-model)
-   - [6.1 Source Code](#61-source-code)
-   - [6.2 Adapter](#62-adapter)
+- [6. Further Work](#6-further-work)
+   - [6.1 Evaluation Metrics Expansion](#61-evaluation-metrics-expansion)
+   - [6.2 Hyperparameter Optimization](#62-hyperparameter-optimization)
+   - [6.3 Chunk Processing Enhancement](#63-chunk-processing-enhancement)
+   - [6.4 Post-Processing Enhancement](#64-post-processing-enhancement)
+   - [6.5 Cross-Lingual Generalization](#65-cross-lingual-generalization)
+- [7. Source Code and Model](#7-source-code-and-model)
+   - [7.1 Source Code](#71-source-code)
+   - [7.2 Adapter](#72-adapter)
+   - [7.3 Usage](#73-usage)
 
 ## 1. Adapter Architecture
 
@@ -86,7 +93,7 @@ The adapter architecture offers several significant advantages:
 - Example:
 ```
 {
-"document": "Artificial Intelligence (AI) is a subfield of computer science dedicated to developing systems and software that can simulate human intelligence.
+"article": "Artificial Intelligence (AI) is a subfield of computer science dedicated to developing systems and software that can simulate human intelligence.
 It includes multiple research directions such as machine learning, deep learning, natural language processing, and computer vision.
 Machine learning uses statistical techniques to enable computer systems to learn from data and gradually improve performance without explicit programming.
 Deep learning is a branch of machine learning that uses multi-layer neural networks to process data, particularly suitable for handling unstructured data such as images, sound, and text.
@@ -120,8 +127,6 @@ Artificial intelligence is a branch of computer science that simulates human int
 3. **Summary Length Ratio** (↔)
    - Ratio of generated summary length to reference summary length
    - Optimal values are close to 100%  (neither too high nor too low)
-
-> **Note on Future work**: Future work will implement specialized scientific evaluation metrics (**Terminology Precision, Factual Consistency, Citation Retention**) to better assess scientific accuracy beyond general text similarity.
 
 ### 3.2 Training Loss (↓)
 Training uses standard **Cross-Entropy Loss**, calculating negative log-likelihood between predicted and target tokens. It's implemented with PyTorch's CrossEntropyLoss, applies only to summary tokens, and serves as the main optimization objective.
@@ -257,14 +262,6 @@ Data preprocessing forms the foundation for model training, transforming raw doc
 2. **Field Standardization**: Unify field naming (article → text, abstract → summary)
 3. **Sampling Control**: Implement configurable random sampling for large datasets
 
-> **Note**: Based on our dataset quality analysis (Section 4.1.2), the PubMed dataset exhibits high quality with professionally written content. Therefore, minimal cleaning was required beyond basic empty value filtering. For datasets of lower quality, additional cleaning steps commonly include:
-> - **Text Normalization**: Standardizing unicode characters, removing excessive whitespace, and normalizing punctuation
-> - **Noise Removal**: Eliminating HTML tags, URLs, and other non-textual elements
-> - **Duplicate Detection**: Removing exact or near-duplicate document-summary pairs
-> - **Outlier Filtering**: Removing samples with extreme length ratios or unusual text patterns
-> - **Language Detection**: Ensuring all content is in the expected language (English)
-> - **Content Quality Filtering**: Removing samples with high special character ratios or extremely short/long sentences
-
 #### Step 3: Template Application and Formatting
 1. **Prompt Template Selection**: Choose appropriate domain-specific prompt templates based on dataset type
 2. **Format Construction**: Combine text with prompt templates to create model-ready input format
@@ -363,8 +360,6 @@ Load the base model using Hugging Face's AutoModelForCausalLM and configure toke
      - Bias terms primarily affect token-level baseline preferences rather than contextual understanding
      - For summarization, contextual relationships between tokens are more important than individual token biases
 
-> **Future work of layer-specific LoRA configurations**: The current implementation applies identical LoRA parameters across all target modules. Future experiments could implement differentiated LoRA configurations for each layer type based on their specific function in the summarization process. For example, attention mechanism components (q_proj, k_proj, v_proj, o_proj) might benefit from different rank or alpha values than feed-forward network components (gate_proj, up_proj, down_proj). This layer-specific optimization could potentially achieve better precision with the same or fewer trainable parameters.
-
 ### 5.4 Training Process
 
 The training process leverages the SFTTrainer from the TRL (Transformer Reinforcement Learning) library to streamline fine-tuning while applying best practices for efficient learning. The process focuses on adapter parameter optimization while keeping the base model frozen.
@@ -373,6 +368,7 @@ The training process leverages the SFTTrainer from the TRL (Transformer Reinforc
 - Configure comprehensive training parameters using SFTConfig
 - Establish optimization strategy and scheduling
 - Set up evaluation protocols and output management
+- **Dataset Configuration**: Due to project time constraints, we used a subset of 5,000 training samples, 500 validation samples, and 500 test samples, while maintaining the original distribution characteristics.
 
 ```python
 training_args = SFTConfig(
@@ -417,7 +413,16 @@ The configuration includes several optimized components:
    - Linear decay for remaining steps (default scheduler behavior in Hugging Face Trainer)
    - Minimum learning rate: 10% of peak learning rate (inherent behavior of the linear scheduler, not explicitly configured)
 
-#### Step 2: Trainer Setup and Execution
+#### Step 2: Hardware Configuration and Training Time
+
+The training was conducted using the following hardware setup:
+
+- **GPU**: 8× NVIDIA H100 GPUs (80GB Memory each)
+- **System**: Linux-based high-performance computing server
+
+Training the adapter on the 5,000-sample subset completed in approximately 10 hours (5 epochs).
+
+#### Step 3: Trainer Setup and Execution
 - Initialize and execute the training process by setting up SFTTrainer with the model, datasets, and LoRA configuration, then run the training loop with automated evaluation and checkpointing.
 
 ```python
@@ -435,7 +440,7 @@ trainer = SFTTrainer(
 trainer.train()
 ```
 
-#### Step 3: Model Persistence and Deployment
+#### Step 4: Model Persistence and Deployment
 - Save the best adapter weights based on validation performance
 - Create a portable adapter that can be distributed separately from base model
 ```python
@@ -452,12 +457,6 @@ Post-Processing Workflow of Output Cleanup and Normalization：
 - Fix common tokenization artifacts (split words, irregular spacing)
 - Normalize scientific notation, units, and numerical representations
 
-> **Future work on Advanced Post-Processing**: The following steps represent the design vision but are not yet implemented in the current version. These capabilities could be realized through:
->    - Scientific Content Verification: Using LLMs to compare source text and summary for factual consistency
->    - Linguistic Refinement: Chain-of-thought prompting for targeted grammar and fluency improvements
->    - Format Adaptation: Template-based transformation with domain-specific rules
-
-
 ### 5.6 Evaluation and Optimization
 
 #### Step 1: Metrics Implementation and Calculation
@@ -473,8 +472,6 @@ Post-Processing Workflow of Output Cleanup and Normalization：
   * Top-p values: Evaluating 0.85 ~ 0.95
   * Maximum generation length: Calibrated using Summary Length Ratio
 - Select optimal configuration based on weighted metric performance
-
-> **Future work**: Future work will incorporate human evaluation for qualitative analysis and error diagnosis to complement the automated metrics.
 
 #### Preliminary Evaluation Results
 
@@ -502,13 +499,7 @@ Equally noteworthy is the enhancement in BERTScore F1 (84.81 vs 83.30), suggesti
 
 However, the Length Ratio for both models remains excessively high (1347.67% and 1356.81% respectively), far exceeding the ideal summary length proportion. This suggests that the configured maximum token length may be too generous, causing the models to generate verbose summaries. Although the adapter model shows a slight improvement in this aspect (1347.67% vs 1356.81%), the difference is minimal, indicating that length control remains a key area for future optimization.
 
-Overall, these results are encouraging, proving that even with limited training samples, the adapter method can effectively enhance the summarization performance of large language models. Future work should focus on increasing the scale of training data and optimizing summary conciseness by adjusting the maximum token length to further improve model performance.
-
-> **Future work**: 
-> - Human evaluation of factual accuracy and coherence
-> - Domain-specific assessment of scientific terminology preservation
-> - Analysis of adapter performance across different scientific subdomains
-> - Detailed error analysis to guide future improvements
+Overall, these results proved that even with limited training samples, the adapter method can effectively enhance the summarization performance of large language models. Future work should focus on increasing the scale of training data and optimizing summary conciseness by adjusting the maximum token length to further improve model performance.
 
 ### 5.7 Challenges and Solutions
 
@@ -519,12 +510,6 @@ Overall, these results are encouraging, proving that even with limited training 
 - Design specialized prompts that enhance long-text processing capabilities:
   * Section-aware prompts that direct model attention to document structure
   * Memory-enhancing prompts that include explicit instructions to maintain coherence across long spans
-
-**Future Enhancements**:
-- Process each chunk separately while maintaining cross-references between sections
-- Apply a two-stage summarization approach:
-  * Stage 1: Generate section-level summaries with higher compression ratio
-  * Stage 2: Synthesize section summaries into a coherent final summary
 
 #### Challenge 2: Scientific Domain Adaptation
 
@@ -541,13 +526,6 @@ Overall, these results are encouraging, proving that even with limited training 
 
 **Implemented Solutions**:
 - Balance automated metrics (ROUGE, BERTScore) with targeted human evaluation protocols
-
-**Future Enhancements**:
-- Develop specialized metrics for scientific document summarization that assess:
-  * Terminology precision and consistency
-  * Factual accuracy of numerical data and relationships
-  * Preservation of key scientific claims and findings
-  * Methodological clarity and completeness
 
 #### Challenge 4: Summary Quality Balance
 
@@ -567,13 +545,6 @@ Overall, these results are encouraging, proving that even with limited training 
 **Implemented Solutions**:
 - Leverage the multilingual capabilities inherited from the base Llama-3.2-3B-Instruct model
 
-**Future Enhancements**:
-- Create language-specific prompt templates that account for structural differences in scientific writing across languages
-- Develop targeted evaluation datasets for major scientific languages (Chinese, Spanish, French, German, Japanese)
-- Implement language-specific adapters that can be applied to the base model for different language requirements:
-  * Train language-specialized LoRA adapters using the same architecture but language-specific datasets
-  * Create a modular system allowing dynamic switching between language adapters
-
 #### Challenge 6: Computational Resource Constraints
 
 **Problem**: Training and deploying efficient summarization models for scientific literature requires balancing model quality with computational feasibility, especially in research environments with limited GPU resources.
@@ -582,13 +553,57 @@ Overall, these results are encouraging, proving that even with limited training 
 - Optimize LoRA hyperparameters (rank, alpha) to maximize quality while minimizing parameter count
 - Implement gradient checkpointing and mixed precision training to reduce memory requirements
 
-**Future Enhancements**:
-- Develop inference optimization techniques such as weight merging and quantization
-- Design progressive training strategies that enable incremental improvements with limited resources
+## 6. Further Work
 
-## 6. Source Code and Model
+This section outlines future work directions in order of implementation sequence.
 
-### 6.1 Source Code
+### 6.1 Evaluation Metrics Expansion
+
+Develop specialized evaluation metrics for scientific literature:
+
+- **Terminology Precision**: Measure correct usage and retention of scientific terms
+- **Factual Consistency**: Assess match between generated summaries and original text facts
+- **Citation Retention**: Evaluate ability to preserve key citation information
+
+Implementation is straightforward and directly enhances our ability to select better models.
+
+### 6.2 Hyperparameter Optimization
+
+- **Layer-Specific LoRA Configuration**: Implement differentiated LoRA parameters for different layer types:
+  * Attention components (q_proj, k_proj, v_proj, o_proj) with customized rank/alpha values
+  * Feed-forward networks (gate_proj, up_proj, down_proj) with optimized parameters
+  * This targeted approach can achieve better precision with the same parameter count
+
+- **Generation Parameter Tuning**: Optimize temperature (0.3-0.5) and top-p values (0.9-0.95)
+
+### 6.3 Chunk Processing Enhancement
+
+Improve handling of documents exceeding context window:
+
+- **Two-Stage Summarization**:
+  * Stage 1: Generate section-level summaries with higher compression ratio
+  * Stage 2: Synthesize section summaries into a coherent final summary
+- **Cross-Reference Preservation**: Maintain connections between document sections
+
+### 6.4 Post-Processing Enhancement
+
+Implement output refinement techniques:
+
+- **Scientific Content Verification**: Use LLMs to compare source text and summary for factual consistency
+- **Linguistic Refinement**: Apply chain-of-thought prompting for grammar and fluency improvements
+- **Format Adaptation**: Implement template-based transformation with domain-specific rules
+
+### 6.5 Cross-Lingual Generalization
+
+Extend model capabilities to non-English scientific literature:
+
+- **Multilingual Prompt Templates**: Design templates for different language structures
+- **Language-Specific Adapters**: Train specialized LoRA adapters for major scientific languages
+- **Modular Adapter System**: Enable dynamic switching between language adapters
+
+## 7. Source Code and Model
+
+### 7.1 Source Code
 
 - **GitHub repository**: https://github.com/amd-zhaofeng/SummarizationAdaptor
 - **Source code organization**:
@@ -616,12 +631,12 @@ Overall, these results are encouraging, proving that even with limited training 
 └── README.md              # Project description
 ```
 
-### 6.2 Adapter
+### 7.2 Adapter
 
 - **Adapter Model Path**: `./models/summarization_adapter_20250408_030703`
 - **Usage**: Set the folder path as `adapter_path` in `evaluate.py` of repository. Refer `README.md` for more details.
 
-### 6.3 Usage
+### 7.3 Usage
 
 - **Training the Model**
 
@@ -643,8 +658,14 @@ Overall, these results are encouraging, proving that even with limited training 
   python src/evaluate.py --adapter_path ./models/summarization_adapter_20250408_030703 --dataset ccdv/pubmed-summarization --output_file results_adapter_model_evaluation.json
   ```
 
-- **Inference**
+- **Inference with the Base Model**
 
   ```bash
-  python src/inference.py --adapter_path ./models/summarization_adapter_20250408_030703 --input_file test_case/input.txt --output_file test_case/output.txt
+  python src/inference.py --input_file ./test_case/input.txt --output_file test_case/output_base.txt
+  ```
+
+- **Inference with the Adapter Model**
+
+  ```bash
+  python src/inference.py --adapter_path ./models/summarization_adapter_20250408_030703 --input_file ./test_case/input.txt --output_file test_case/output.txt
   ```

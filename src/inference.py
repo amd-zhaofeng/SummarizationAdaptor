@@ -88,7 +88,7 @@ if __name__ == "__main__":
     input_group.add_argument("--input_file", type=str, help="Path to file containing text to summarize")
 
     parser.add_argument("--max_length", type=int, default=8192, help="Maximum length of input text")
-    parser.add_argument("--max_new_tokens", type=int, default=400, help="Maximum number of tokens for generated summary")
+    parser.add_argument("--max_new_tokens", type=int, default=200, help="Maximum number of tokens for generated summary")
 
     parser.add_argument("--temperature", type=float, default=0.5, help="Temperature parameter for generation")
     parser.add_argument("--top_p", type=float, default=0.9, help="Top-p parameter for generation")

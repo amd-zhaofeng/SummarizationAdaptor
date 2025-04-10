@@ -51,7 +51,13 @@ pip install -r requirements.txt
   python src/evaluate.py --adapter_path ./models/summarization_adapter_20250408_030703 --dataset ccdv/pubmed-summarization --output_file results_adapter_model_evaluation.json
   ```
 
-- **Inference**
+- **Inference with the Base Model**
+
+  ```bash
+  python src/inference.py --input_file ./test_case/input.txt --output_file test_case/output_base.txt
+  ```
+
+- **Inference with the Adapter Model**
 
   ```bash
   python src/inference.py --adapter_path ./models/summarization_adapter_20250408_030703 --input_file ./test_case/input.txt --output_file test_case/output.txt
