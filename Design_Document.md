@@ -84,7 +84,7 @@ The adapter architecture offers several significant advantages:
 
 - Plain text in articles, reports, papers, etc.
 - Example:
-```json
+```
 {
 "document": "Artificial Intelligence (AI) is a subfield of computer science dedicated to developing systems and software that can simulate human intelligence.
 It includes multiple research directions such as machine learning, deep learning, natural language processing, and computer vision.
