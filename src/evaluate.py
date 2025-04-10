@@ -96,28 +96,28 @@ def evaluate_model(
     os.makedirs(output_dir, exist_ok=True)
     # Replace / in dataset_name with _
     formatted_dataset_name = dataset_name.replace("/", "_")
-    results_file = os.path.join(output_dir, f"evaluation_results_{formatted_dataset_name}_{model_type}.json")
+    results_file = os.path.join(output_dir, f"evaluation_results_{formatted_dataset_name}_{model_type}_{max_samples}.json")
 
     # Save metrics
     with open(results_file, "w", encoding="utf-8") as f:
         json.dump(metrics, f, indent=2, ensure_ascii=False)
 
     # Save sample predictions
-    samples_file = os.path.join(output_dir, f"evaluation_samples_{formatted_dataset_name}_{model_type}.json")
+    samples_file = os.path.join(output_dir, f"evaluation_samples_{formatted_dataset_name}_{model_type}_{max_samples}.json")
     samples: List[Dict[str, str]] = []
 
-    for i in range(len(predictions)):
-        samples.append({
-            "text": dataset[i]["text"],
-            "reference": references[i],
-            "prediction": predictions[i]
-        })
+    # for i in range(len(predictions)):
+    #     samples.append({
+    #         "text": dataset[i]["text"],
+    #         "reference": references[i],
+    #         "prediction": predictions[i]
+    #     })
 
-    with open(samples_file, "w", encoding="utf-8") as f:
-        json.dump(samples, f, indent=2, ensure_ascii=False)
+    # with open(samples_file, "w", encoding="utf-8") as f:
+    #     json.dump(samples, f, indent=2, ensure_ascii=False)
 
     logger.info(f"Evaluation results saved to: {results_file}")
-    logger.info(f"Evaluation samples saved to: {samples_file}")
+    # logger.info(f"Evaluation samples saved to: {samples_file}")
 
     # Print main metrics
     logger.info("\n=== Evaluation Results ===")
@@ -129,8 +129,8 @@ def evaluate_model(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Evaluate summarization adapter model")
-    parser.add_argument("--model_name", type=str, default="meta-llama/Llama-3.2-3B-Instruct", help="Base model name")
-    parser.add_argument("--dataset", type=str, default="ccdv/pubmed-summarization", help="Dataset name")
+    parser.add_argument("--model_name", type=str, default="meta-llama/Llama-3.2-3B-Instruct", help="Base model name or path")
+    parser.add_argument("--dataset", type=str, default="ccdv/pubmed-summarization", choices=["ccdv/pubmed-summarization", "ccdv/arxiv-summarization"], help="Dataset name")
     parser.add_argument("--output_dir", type=str, default="./results", help="Output directory")
     parser.add_argument("--adapter_path", type=str, default=None, help="Adapter model path (not needed if using base model)")
 

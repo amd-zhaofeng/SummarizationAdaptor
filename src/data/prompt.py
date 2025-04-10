@@ -6,16 +6,16 @@ from typing import Dict, Optional, Tuple
 # Define prompt prefix and middle parts for each dataset
 PROMPT_PARTS: Dict[str, Tuple[str, str]] = {
     "default": (
-        "Please generate a concise summary for the following text:\n\n",
-        "\n\nSummary: "
+        "Please generate a concise summary for the following text. Your summary should be around 250-300 words and clearly capture the main points:\n\n",
+        "\n\n### SUMMARY ###\n"
     ),
     "ccdv/pubmed-summarization": (
-        "Generate a comprehensive abstract for the following scientific article:\n\n",
-        "\n\nSummary: "
+        "Generate a comprehensive abstract for the following scientific article, including the background, methods, results, and conclusions. Keep your abstract concise, around 250-300 words, and maintain a scientific tone:\n\n",
+        "\n\n### ABSTRACT ###\n"
     ),
     "ccdv/arxiv-summarization": (
-        "Generate a comprehensive abstract for the following scientific article:\n\n",
-        "\n\nAbstract: "
+        "Generate a comprehensive abstract for the following scientific paper, including the research problem, methods, main findings, and significance. Keep your abstract concise, around 250-300 words, and follow academic writing conventions:\n\n",
+        "\n\n### ABSTRACT ###\n"
     ),
 }
 

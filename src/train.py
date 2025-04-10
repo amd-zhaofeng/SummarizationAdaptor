@@ -149,8 +149,8 @@ def train(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train a summarization adapter model")
-    parser.add_argument("--model_name", type=str, default="meta-llama/Llama-3.2-3B-Instruct", help="Base model name")
-    parser.add_argument("--dataset", type=str, default="ccdv/pubmed-summarization", help="Dataset name (cnn_dailymail, xsum, billsum)")
+    parser.add_argument("--model_name", type=str, default="meta-llama/Llama-3.2-3B-Instruct", help="Base model name or path")
+    parser.add_argument("--dataset", type=str, default="ccdv/pubmed-summarization", choices=["ccdv/pubmed-summarization", "ccdv/arxiv-summarization"], help="Dataset name")
     parser.add_argument("--output_dir", type=str, default="./models", help="Output directory")
 
     parser.add_argument("--train_samples", type=int, default=5000, help="Number of training samples, defaults to all")

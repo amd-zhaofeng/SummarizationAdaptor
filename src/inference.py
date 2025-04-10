@@ -31,7 +31,7 @@ def generate_summary(text: str,
         Generated summary text
     """
     # Load adapter model
-    logger.info(f"Loading adapter model from {adapter_path}, base model: {base_model_name}")
+    logger.info(f"Loading adapter model from {adapter_path}, base model: {model_name}")
     adapter = SummarizationAdapter(
         model_name=model_name,
         adapter_path=adapter_path,
@@ -79,7 +79,7 @@ def read_text_file(file_path: str) -> str:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate summary using summarization adapter")
-    parser.add_argument("--model_name", type=str, default="meta-llama/Llama-3.2-3B-Instruct", help="Base model name")
+    parser.add_argument("--model_name", type=str, default="meta-llama/Llama-3.2-3B-Instruct", help="Base model name or path")
     parser.add_argument("--output_file", type=str, default="./results/inference_output.txt", help="Output file path")
     parser.add_argument("--adapter_path", type=str, default=None, help="Adapter model path")
 

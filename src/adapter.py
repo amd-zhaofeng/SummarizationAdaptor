@@ -138,20 +138,30 @@ class SummarizationAdapter:
         # Get prompt parts to determine the delimiter based on dataset
         _, prompt_middle = get_prompt_parts(dataset_name)
         
-        # Extract delimiter from prompt_middle
-        delimiter = prompt_middle.strip()
+        # Extract summary portion
+        # First try to find the marker that indicates the start of the summary
+        markers = ["### SUMMARY ###", "### ABSTRACT ###"]
+        summary = None
         
-        # Ensure correct extraction of summary portion based on dataset-specific delimiter
-        if delimiter in decoded:
-            summary = decoded.split(delimiter)[-1].strip()
-        else:
-            # If delimiter not found, use fallback approach
-            input_text = prompt.split("\n\n")[0]
-            if input_text in decoded:
-                summary = decoded.replace(input_text, "").strip()
+        for marker in markers:
+            if marker in decoded:
+                # Split by the marker and take everything after it
+                summary = decoded.split(marker)[-1].strip()
+                break
+        
+        # If no marker found, fall back to original approach
+        if summary is None:
+            delimiter = prompt_middle.strip()
+            if delimiter in decoded:
+                summary = decoded.split(delimiter)[-1].strip()
             else:
-                summary = decoded.strip()
-
+                # Last resort: try to remove the input text
+                input_text = prompt.split("\n\n")[0]
+                if input_text in decoded:
+                    summary = decoded.replace(input_text, "").strip()
+                else:
+                    summary = decoded.strip()
+        
         # Explicit cast to ensure string return type
         summary_str: str = cast(str, summary)
         logger.info(f"Extracted summary: {summary_str}")

@@ -143,7 +143,7 @@ These metrics are used for:
 ### 4.1 Training Dataset
 
 #### 4.1.1 Dataset Description
-In this project, for long document summarization, the **PubMed Summarization Dataset** (ccdv/pubmed-summarization) was selected. This dataset contains scientific articles from the biomedical domain with corresponding abstracts, which serve as reference summaries. In the processing pipeline, the "article" field is renamed to "text" and the "abstract" field is renamed to "summary" for consistency.
+In this project, for long document summarization, the **PubMed Summarization Dataset** ([ccdv/pubmed-summarization](https://huggingface.co/datasets/ccdv/pubmed-summarization)) was selected. This dataset contains scientific articles from the biomedical domain with corresponding abstracts, which serve as reference summaries. In the processing pipeline, the "article" field is renamed to "text" and the "abstract" field is renamed to "summary" for consistency.
 
 **Dataset Features**:
 - **Size**: 133,215 article-abstract pairs (119,924 training, 6,633 validation, 6,658 test samples)
@@ -224,7 +224,7 @@ For comprehensive model evaluation, two distinct test datasets were used to asse
 
 #### 4.2.2 ArXiv Test Set
 
-- **Description**: The test split from the ArXiv Summarization Dataset (ccdv/arxiv-summarization), used to evaluate the model's cross-domain generalization capabilities on scientific papers from different fields.
+- **Description**: The test split from the ArXiv Summarization Dataset ([ccdv/arxiv-summarization](https://huggingface.co/datasets/ccdv/arxiv-summarization)), used to evaluate the model's cross-domain generalization capabilities on scientific papers from different fields.
 
 - **Size**: 6,440 article-abstract pairs
 
@@ -363,6 +363,7 @@ Load the base model using Hugging Face's AutoModelForCausalLM and configure toke
      - Bias terms primarily affect token-level baseline preferences rather than contextual understanding
      - For summarization, contextual relationships between tokens are more important than individual token biases
 
+> **Future work of layer-specific LoRA configurations**: The current implementation applies identical LoRA parameters across all target modules. Future experiments could implement differentiated LoRA configurations for each layer type based on their specific function in the summarization process. For example, attention mechanism components (q_proj, k_proj, v_proj, o_proj) might benefit from different rank or alpha values than feed-forward network components (gate_proj, up_proj, down_proj). This layer-specific optimization could potentially achieve better precision with the same or fewer trainable parameters.
 
 ### 5.4 Training Process
 
@@ -477,23 +478,31 @@ Post-Processing Workflow of Output Cleanup and Normalization：
 
 #### Preliminary Evaluation Results
 
-The following tables present the preliminary evaluation results of our adapter compared to baseline models with the default parameters in the repository (with 5000 samples for training, 500 for validation).
+The following tables present the preliminary evaluation results of our adapter compared to baseline models with the default parameters in the repository (with 5000 samples for training, 500 for validation, 500 for test).
 
-##### PubMed Test Set (In-Domain) (500 Samples)
+##### PubMed Test Set (In-Domain)
 
 | Model | ROUGE-1 | ROUGE-2 | ROUGE-L | BERTScore F1 | Length Ratio |
 |-------|---------|---------|---------|--------------|--------------|
 | Our Adapter | 41.46 | 18.02 | 24.41 | 85.70 | 338.08% |
 | Base Llama-3.2-3B | 37.18 | 14.05 | 19.88 | 83.34 | 381.19% |
 
-##### ArXiv Test Set (Cross-Domain) (500 Samples)
+##### ArXiv Test Set (Cross-Domain)
 
 | Model | ROUGE-1 | ROUGE-2 | ROUGE-L | BERTScore F1 | Length Ratio |
 |-------|---------|---------|---------|--------------|--------------|
-| Our Adapter | - | - | - | - | - |
-| Base Llama-3.2-3B | - | - | - | - | - |
+| Our Adapter | 30.34 | 12.12 | 17.90 | 84.81 | 1347.67% |
+| Base Llama-3.2-3B | 28.53 | 10.33 | 16.10 | 83.30 | 1356.81% |
 
-These preliminary results demonstrate the effectiveness of our adapter approach. The adapter significantly outperforms the base Llama-3.2-3B-Instruct model across all metrics, with notable improvements in ROUGE scores and semantic similarity. Additionally, the adapter achieves better length control improvement in length ratio compared to the base model, indicating more appropriate summary proportions.
+These preliminary results demonstrate the effectiveness of the adapter approach. Despite being constrained by time and computational resources, which limited the training to only 5,000 samples for fine-tuning, the adapter model still significantly outperforms the base Llama-3.2-3B-Instruct model across all evaluation metrics.
+
+On the ArXiv cross-domain test set, the adapter model shows an improvement of 1.81 percentage points in ROUGE-1 (30.34 vs 28.53), 1.79 percentage points in ROUGE-2 (12.12 vs 10.33), and 1.80 percentage points in ROUGE-L (17.90 vs 16.10). These improvements indicate that even with limited training data, the adapter model can generate more accurate and relevant summary content.
+
+Equally noteworthy is the enhancement in BERTScore F1 (84.81 vs 83.30), suggesting that the model has made progress in semantic understanding and expression, better capturing the core meaning of the original text.
+
+However, the Length Ratio for both models remains excessively high (1347.67% and 1356.81% respectively), far exceeding the ideal summary length proportion. This suggests that the configured maximum token length may be too generous, causing the models to generate verbose summaries. Although the adapter model shows a slight improvement in this aspect (1347.67% vs 1356.81%), the difference is minimal, indicating that length control remains a key area for future optimization.
+
+Overall, these results are encouraging, proving that even with limited training samples, the adapter method can effectively enhance the summarization performance of large language models. Future work should focus on increasing the scale of training data and optimizing summary conciseness by adjusting the maximum token length to further improve model performance.
 
 > **Future work**: 
 > - Human evaluation of factual accuracy and coherence
@@ -611,3 +620,31 @@ These preliminary results demonstrate the effectiveness of our adapter approach.
 
 - **Adapter Model Path**: `./models/summarization_adapter_20250408_030703`
 - **Usage**: Set the folder path as `adapter_path` in `evaluate.py` of repository. Refer `README.md` for more details.
+
+### 6.3 Usage
+
+- **Training the Model**
+
+  ```bash
+  python src/train.py --base_model meta-llama/Llama-3.2-3B-Instruct --dataset ccdv/pubmed-summarization --output_dir models/
+  ```
+
+  The output adapter will be saved in the `./models` directory with a timestamp-based name, such as `./models/summarization_adapter_20250408_030703`, which is referred to as the adapter path.
+
+- **Evaluating the Base Model**
+
+  ```bash
+  python src/evaluate.py --dataset ccdv/pubmed-summarization --output_file results_base_model_evaluation.json
+  ```
+
+- **Evaluating the Adapter Model**
+
+  ```bash
+  python src/evaluate.py --adapter_path ./models/summarization_adapter_20250408_030703 --dataset ccdv/pubmed-summarization --output_file results_adapter_model_evaluation.json
+  ```
+
+- **Inference**
+
+  ```bash
+  python src/inference.py --adapter_path ./models/summarization_adapter_20250408_030703 --input_file test_case/input.txt --output_file test_case/output.txt
+  ```

@@ -37,6 +37,10 @@ def load_dataset_with_unified_columns(dataset_name: str, split: Optional[str] = 
         dataset = load_dataset(dataset_name, split=split)
         dataset = dataset.rename_column("article", "text")
         dataset = dataset.rename_column("abstract", "summary")
+    elif dataset_name == "ccdv/arxiv-summarization":
+        dataset = load_dataset(dataset_name, split=split)
+        dataset = dataset.rename_column("article", "text")
+        dataset = dataset.rename_column("abstract", "summary")
     else:
         raise ValueError(f"Unsupported dataset: {dataset_name}")
 

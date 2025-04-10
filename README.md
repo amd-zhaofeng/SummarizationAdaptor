@@ -31,28 +31,28 @@ pip install -r requirements.txt
 
 ## Usage
 
-### Training the Model
+- **Training the Model**
 
-```bash
-python src/train.py --base_model meta-llama/Llama-3.2-3B-Instruct --dataset ccdv/pubmed-summarization --output_dir models/
-```
+  ```bash
+  python src/train.py --base_model meta-llama/Llama-3.2-3B-Instruct --dataset ccdv/pubmed-summarization --output_dir models/
+  ```
 
-The output adapter will be saved in the `./models` directory with a timestamp-based name, such as `./models/summarization_adapter_20250408_030703`, which is referred to as the adapter path.
+  The output adapter will be saved in the `./models` directory with a timestamp-based name, such as `./models/summarization_adapter_20250408_030703`, which is referred to as the adapter path.
 
-### Evaluating the Base Model
+- **Evaluating the Base Model**
 
-```bash
-python src/evaluate.py --dataset ccdv/pubmed-summarization --output_file results_base_model_evaluation.json
-```
+  ```bash
+  python src/evaluate.py --dataset ccdv/pubmed-summarization --output_file results_base_model_evaluation.json
+  ```
 
-### Evaluating the Adapter Model
+- **Evaluating the Adapter Model**
 
-```bash
-python src/evaluate.py --adapter_path ./models/summarization_adapter_20250408_030703 --dataset ccdv/pubmed-summarization --output_file results_adapter_model_evaluation.json
-```
+  ```bash
+  python src/evaluate.py --adapter_path ./models/summarization_adapter_20250408_030703 --dataset ccdv/pubmed-summarization --output_file results_adapter_model_evaluation.json
+  ```
 
-### Inference
+- **Inference**
 
-```bash
-python src/inference.py --adapter_path ./models/summarization_adapter_20250408_030703 --input_file input.txt --output_file output.txt
-```
+  ```bash
+  python src/inference.py --adapter_path ./models/summarization_adapter_20250408_030703 --input_file ./test_case/input.txt --output_file test_case/output.txt
+  ```
