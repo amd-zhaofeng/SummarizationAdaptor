@@ -48,11 +48,11 @@ python src/evaluate.py --dataset ccdv/pubmed-summarization --output_file results
 ### Evaluating the Adapter Model
 
 ```bash
-python src/evaluate.py --adapter_path <the adapter path> --dataset ccdv/pubmed-summarization --output_file results_adapter_model_evaluation.json
+python src/evaluate.py --adapter_path ./models/summarization_adapter_20250408_030703 --dataset ccdv/pubmed-summarization --output_file results_adapter_model_evaluation.json
 ```
 
 ### Inference
 
 ```bash
-python src/inference.py --model_path models/ --input_file input.txt --output_file output.txt
+python src/inference.py --adapter_path ./models/summarization_adapter_20250408_030703 --input_file input.txt --output_file output.txt
 ```

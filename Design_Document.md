@@ -587,7 +587,7 @@ These preliminary results demonstrate the effectiveness of our adapter approach.
 ```
 .
 ├── models/                # Adapter checkpoints (saved model weights)
-│   └── summarization_adapter_* # Dated checkpoint directories
+│   └── summarization_adapter_20250408_030703* # Finetuned adapter path
 ├── src/                   # Source code
 │   ├── data/
 │   │   ├── analysis.py    # Dataset analysis tools
@@ -609,5 +609,5 @@ These preliminary results demonstrate the effectiveness of our adapter approach.
 
 ### 6.2 Adapter
 
-- **Huggingface repository**: 
-- **Usage**: Download and set the folder path as `adapter_path` in `evaluate.py` of repository.
+- **Adapter Model Path**: `./models/summarization_adapter_20250408_030703`
+- **Usage**: Set the folder path as `adapter_path` in `evaluate.py` of repository. Refer `README.md` for more details.
