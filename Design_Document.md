@@ -150,6 +150,8 @@ These metrics are used for:
 #### 4.1.1 Dataset Description
 In this project, for long document summarization, the **PubMed Summarization Dataset** ([ccdv/pubmed-summarization](https://huggingface.co/datasets/ccdv/pubmed-summarization)) was selected. This dataset contains scientific articles from the biomedical domain with corresponding abstracts, which serve as reference summaries. In the processing pipeline, the "article" field is renamed to "text" and the "abstract" field is renamed to "summary" for consistency.
 
+**Note**: Due to project time constraints, our experiments utilized a subset of 5,000 training samples, 500 validation samples, and 500 test samples, while maintaining the distribution characteristics of the full dataset described below.
+
 **Dataset Features**:
 - **Size**: 133,215 article-abstract pairs (119,924 training, 6,633 validation, 6,658 test samples)
 - **Domain**: Biomedical and healthcare research
@@ -420,7 +422,7 @@ The training was conducted using the following hardware setup:
 - **GPU**: 8× NVIDIA H100 GPUs (80GB Memory each)
 - **System**: Linux-based high-performance computing server
 
-Training the adapter on the 5,000-sample subset completed in approximately 10 hours (5 epochs).
+Training the adapter on the 5,000-sample subset completed in approximately 10 hours (5 epochs), demonstrating the efficiency of the LoRA approach compared to full model fine-tuning which would typically require days instead of hours on similar hardware.
 
 #### Step 3: Trainer Setup and Execution
 - Initialize and execute the training process by setting up SFTTrainer with the model, datasets, and LoRA configuration, then run the training loop with automated evaluation and checkpointing.
@@ -600,6 +602,8 @@ Extend model capabilities to non-English scientific literature:
 - **Multilingual Prompt Templates**: Design templates for different language structures
 - **Language-Specific Adapters**: Train specialized LoRA adapters for major scientific languages
 - **Modular Adapter System**: Enable dynamic switching between language adapters
+
+The implementation sequence prioritizes foundational improvements to metrics and hyperparameters before advancing to more complex enhancements for chunking, post-processing, and multilingual capabilities. These enhancements represent a structured roadmap for advancing the capabilities of our scientific summarization adapter while maintaining its efficient architecture.
 
 ## 7. Source Code and Model
 
